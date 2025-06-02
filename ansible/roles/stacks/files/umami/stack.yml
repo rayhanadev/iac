@@ -1,0 +1,25 @@
+services:
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DATABASE_TYPE: postgresql
+      HASH_SALT: ${HASH_SALT}
+      APP_SECRET: ${APP_SECRET}
+    ports:
+      - "3001:3000" # Local port only, exposed via Caddy
+    deploy:
+      replicas: 1
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - umami_db_data:/var/lib/postgresql/data
+volumes:
+  umami_db_data:

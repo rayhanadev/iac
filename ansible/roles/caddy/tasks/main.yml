@@ -1,0 +1,31 @@
+- name: Download Caddy GPG key
+  ansible.builtin.apt_key:
+    url: https://dl.cloudsmith.io/public/caddy/stable/gpg.key
+    state: present
+
+- name: Add Caddy repository
+  ansible.builtin.apt_repository:
+    repo: "deb [trusted=yes] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main"
+    state: present
+    filename: caddy
+
+- name: Install Caddy binary
+  apt:
+    name: caddy
+    state: present
+    update_cache: true
+
+- name: Copy Caddyfile
+  copy:
+    src: Caddyfile
+    dest: /etc/caddy/Caddyfile
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Caddy
+
+- name: Ensure Caddy service is enabled and running
+  systemd:
+    name: caddy
+    enabled: true
+    state: started

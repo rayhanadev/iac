@@ -1,0 +1,46 @@
+# The Caddyfile is an easy way to configure your Caddy web server.
+#
+# Unless the file starts with a global options block, the first
+# uncommented line is always the address of your site.
+#
+# To use your own domain name (with automatic HTTPS), first make
+# sure your domain's A/AAAA DNS records are properly pointed to
+# this machine's public IP, then replace ":80" below with your
+# domain name.
+
+# Refer to the Caddy docs for more information:
+# https://caddyserver.com/docs/caddyfile
+
+{
+  email me@rayhanadev.com
+  admin :2019
+}
+
+dash.rayhanadev.net {
+    reverse_proxy https://alpha:9443 {
+        transport http {
+            tls
+            tls_insecure_skip_verify
+        }
+    }
+}
+
+registry.rayhanadev.net {
+    reverse_proxy https://alpha:5000 {
+        transport http {
+            tls
+        }
+    }
+}
+
+grafana.rayhanadev.net {
+    reverse_proxy http://alpha:3000
+}
+
+umami.rayhanadev.net {
+    reverse_proxy http://alpha:3001
+}
+
+status.rayhanadev.net {
+    reverse_proxy http://alpha:3002
+}

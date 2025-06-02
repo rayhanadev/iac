@@ -1,0 +1,12 @@
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    ports:
+      - "3002:3001"  # expose internal port 3001 on host 3002
+    volumes:
+      - uptime_kuma_data:/app/data
+    deploy:
+      replicas: 1
+
+volumes:
+  uptime_kuma_data:

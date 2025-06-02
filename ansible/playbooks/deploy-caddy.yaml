@@ -1,0 +1,35 @@
+- name: Inject dynamic gateway IP
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Set zeta’s ansible_host
+      add_host:
+        name: zeta
+        groups: gateway
+        ansible_host: "{{ gateway_public_ip.value }}"
+
+- name: Connect nodes to Tailscale
+  hosts: gateway
+  become: true
+  tasks:
+    - name: Ensure Tailscale is installed
+      shell: curl -fsSL https://tailscale.com/install.sh | sh
+      args:
+        creates: /usr/sbin/tailscaled
+
+    - name: Check if Tailscale is already up
+      shell: tailscale status
+      register: tailscale_status
+      failed_when: false
+      changed_when: false
+
+    - name: Start Tailscale if not already running
+      shell: tailscale up --authkey={{ tailscale_gateway_node_setup_key.value }}
+      args:
+        creates: /var/lib/tailscale/tailscaled.state
+
+- name: Setup Caddy on gateway
+  hosts: gateway
+  become: true
+  roles:
+    - caddy

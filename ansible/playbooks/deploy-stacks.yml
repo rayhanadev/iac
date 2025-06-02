@@ -1,0 +1,23 @@
+- name: Sync and deploy stacks
+  hosts: managers[0]
+  become: true
+  collections:
+    - community.docker
+  roles:
+    - stacks
+
+  tasks:
+    - name: Discover stacks
+      find:
+        paths: /opt/stacks
+        file_type: directory
+      register: stack_dirs
+
+    - name: Deploy each discovered stack
+      docker_stack:
+        name: "{{ item.path | basename }}"
+        state: present
+        compose:
+          - "{{ item.path }}/stack.yml"
+        env_file: "{{ item.path }}/.env"
+      loop: "{{ stack_dirs.files }}"

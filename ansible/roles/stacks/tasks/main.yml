@@ -1,0 +1,11 @@
+- name: Ensure /opt/stacks exists
+  file:
+    path: /opt/stacks
+    state: directory
+
+- name: Synchronize stacks directory
+  synchronize:
+    src: "{{ role_path }}/files/"
+    dest: /opt/stacks/
+    recursive: true
+    delete: true

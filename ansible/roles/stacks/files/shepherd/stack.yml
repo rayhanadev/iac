@@ -1,0 +1,34 @@
+services:
+  shepherd:
+    image: containrrr/shepherd
+    environment:
+      TZ: "US/Eastern"
+      VERBOSE: "true"
+      IGNORELIST_SERVICES: "label=shepherd.autodeploy=false"
+      FILTER_SERVICES: "label=shepherd.autodeploy=true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      replicas: 0
+      restart_policy:
+        condition: none
+      labels:
+        - swarm.cronjob.enable=true
+        - swarm.cronjob.schedule=*/5 * * * *
+        - swarm.cronjob.skip-running=true
+      placement:
+        constraints:
+          - node.role == manager
+
+  scheduler:
+    image: crazymax/swarm-cronjob:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - "TZ=US/Eastern"
+      - "LOG_LEVEL=info"
+      - "LOG_JSON=false"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager

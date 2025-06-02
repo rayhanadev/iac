@@ -1,0 +1,12 @@
+cloudflare_api_token = "<your-cloudflare-api-token>"
+cloudflare_zone_id   = "<your-cloudflare-zone-id>"
+
+gcp_project = "<your-gcp-project-id>"
+gcp_zone    = "<your-gcp-zone>"
+gcp_region  = "<your-gcp-region>"
+
+ssh_user       = "<your-ssh-username>"
+ssh_public_key = "<your-ssh-public-key>"
+
+tailscale_api_key = "<your-tailscale-api-key>"
+tailscale_tailnet = "<your-tailscale-tailnet>"

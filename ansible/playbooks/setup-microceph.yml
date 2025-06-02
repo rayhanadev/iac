@@ -1,0 +1,45 @@
+- name: Configure MicroCeph base on all nodes
+  hosts: swarm
+  become: true
+  roles:
+    - microceph
+
+- name: Bootstrap MicroCeph cluster on first manager
+  hosts: managers[0]
+  become: true
+  tasks:
+    - name: Bootstrap cluster
+      shell: microceph cluster bootstrap
+      args:
+        creates: /var/snap/microceph/common/cluster.yaml
+
+    - name: Generate join tokens
+      shell: microceph cluster add {{ item }}
+      register: join_tokens
+      loop: "{{ groups['managers'][1:] + groups['workers'] }}"
+      changed_when: false
+
+    - name: Set join tokens as fact
+      set_fact:
+        microceph_join_tokens: "{{ dict(join_tokens.results | zip(groups['managers'][1:] + groups['workers'])) }}"
+
+- name: Join other nodes to MicroCeph cluster
+  hosts: managers[1:],workers
+  become: true
+  tasks:
+    - name: Join cluster
+      shell: microceph cluster join {{ hostvars[groups['managers'][0]].microceph_join_tokens[inventory_hostname] }}
+
+- name: Extract and distribute Ceph admin key
+  hosts: managers[0]
+  become: true
+  tasks:
+    - name: Extract Ceph admin key
+      shell: ceph auth get-key client.admin
+      register: ceph_admin_key
+
+    - name: Distribute admin key to all nodes
+      set_fact:
+        microceph_admin_secret: "{{ ceph_admin_key.stdout }}"
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['swarm'] }}"

@@ -1,0 +1,29 @@
+- name: Create cephfs_data pool
+  shell: /snap/bin/ceph osd pool create cephfs_data 64
+  args:
+    creates: /var/snap/microceph/common/cephfs_data_created
+
+- name: Mark cephfs_data created
+  file:
+    path: /var/snap/microceph/common/cephfs_data_created
+    state: touch
+
+- name: Create cephfs_metadata pool
+  shell: /snap/bin/ceph osd pool create cephfs_metadata 64
+  args:
+    creates: /var/snap/microceph/common/cephfs_metadata_created
+
+- name: Mark cephfs_metadata created
+  file:
+    path: /var/snap/microceph/common/cephfs_metadata_created
+    state: touch
+
+- name: Create CephFS filesystem
+  shell: /snap/bin/ceph fs new cephfs cephfs_metadata cephfs_data
+  args:
+    creates: /var/snap/microceph/common/cephfs_created
+
+- name: Mark cephfs filesystem created
+  file:
+    path: /var/snap/microceph/common/cephfs_created
+    state: touch

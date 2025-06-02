@@ -1,0 +1,6 @@
+- name: Reboot if swap was active
+  reboot:
+    msg: "Rebooting to disable swap"
+    pre_reboot_delay: 5
+    reboot_timeout: 600
+    test_command: whoami

@@ -1,0 +1,56 @@
+- name: Setup Docker Swarm
+  hosts: managers
+  become: true
+  tasks:
+    - name: Install Docker
+      include_role:
+        name: docker
+
+- name: Initialize Swarm on first manager
+  hosts: "{{ groups['managers'][0] }}"
+  become: true
+  tasks:
+    - name: Init Swarm
+      shell: docker swarm init --advertise-addr {{ ansible_host }}
+      args:
+        creates: /var/lib/docker/swarm
+
+    - name: Get manager join token
+      shell: docker swarm join-token -q manager
+      register: manager_token
+
+    - name: Get worker join token
+      shell: docker swarm join-token -q worker
+      register: worker_token
+
+    - name: Set swarm tokens
+      set_fact:
+        swarm_manager_token: "{{ manager_token.stdout }}"
+        swarm_worker_token: "{{ worker_token.stdout }}"
+
+    - name: Share tokens with all nodes
+      add_host:
+        name: "{{ item }}"
+        groups: swarm
+        swarm_manager_token: "{{ swarm_manager_token }}"
+        swarm_worker_token: "{{ swarm_worker_token }}"
+        manager_ip: "{{ ansible_host }}"
+      loop: "{{ groups['swarm'] }}"
+
+- name: Join remaining managers to Swarm
+  hosts: "{{ groups['managers'][1:] }}"
+  become: true
+  tasks:
+    - name: Join as manager
+      shell: docker swarm join --token {{ hostvars[inventory_hostname].swarm_manager_token }} {{ hostvars[inventory_hostname].manager_ip }}:2377
+      args:
+        creates: /var/lib/docker/swarm
+
+- name: Join workers to Swarm
+  hosts: workers
+  become: true
+  tasks:
+    - name: Join as worker
+      shell: docker swarm join --token {{ hostvars[inventory_hostname].swarm_worker_token }} {{ hostvars[inventory_hostname].manager_ip }}:2377
+      args:
+        creates: /var/lib/docker/swarm

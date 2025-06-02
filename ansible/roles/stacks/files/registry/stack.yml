@@ -1,0 +1,38 @@
+services:
+  registry:
+    image: registry:2
+    ports:
+      - "5000:5000"
+    environment:
+      REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+      REGISTRY_HTTP_TLS_CERTIFICATE: /run/secrets/registry.crt
+      REGISTRY_HTTP_TLS_KEY: /run/secrets/registry.key
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+    secrets:
+      - registry.crt
+      - registry.key
+    volumes:
+      - registry_data:/var/lib/registry
+      - auth_data:/auth:ro
+
+secrets:
+  registry.crt:
+    external: true
+  registry.key:
+    external: true
+
+volumes:
+  registry_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /mnt/cephfs/docker-registry/data
+      o: bind
+  auth_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /mnt/cephfs/docker-registry/auth
+      o: bind

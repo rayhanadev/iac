@@ -1,0 +1,27 @@
+- name: Install ceph-common if needed
+  apt:
+    name: ceph-common
+    state: present
+
+- name: Create CephFS mount directory
+  file:
+    path: /mnt/cephfs
+    state: directory
+    mode: '0755'
+
+- name: Copy Ceph admin secret
+  copy:
+    content: "{{ hostvars[inventory_hostname].microceph_admin_secret | default('') }}"
+    dest: /etc/ceph/admin.secret
+    mode: '0600'
+  when: hostvars[inventory_hostname].microceph_admin_secret is defined
+
+- name: Mount CephFS
+  mount:
+    path: /mnt/cephfs
+    src: "{{ hostvars[groups['managers'][0]].ansible_host }}:6789:/"
+    fstype: ceph
+    opts: "_netdev,name=admin,secretfile=/etc/ceph/admin.secret"
+    state: mounted
+    dump: 0
+    passno: 0

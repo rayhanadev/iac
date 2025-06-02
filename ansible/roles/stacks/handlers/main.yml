@@ -1,0 +1,3 @@
+- name: Reload stacks
+  command: docker stack deploy --compose-file /opt/stacks/{{ item }}/stack.yml {{ item }}
+  loop: "{{ stacks_to_deploy }}"

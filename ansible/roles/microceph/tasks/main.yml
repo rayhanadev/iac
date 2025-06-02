@@ -1,0 +1,44 @@
+- name: Install MicroCeph via Snap
+  snap:
+    name: microceph
+    classic: true
+    state: present
+
+- name: Hold MicroCeph updates
+  shell: snap refresh --hold microceph
+  args:
+    warn: false
+
+- name: Disable swap
+  shell: swapoff -a
+  when: ansible_swaptotal_mb > 0
+  notify: Reboot if swap was active
+
+- name: Ensure swap is disabled on boot
+  replace:
+    path: /etc/fstab
+    regexp: '^\s*([^#]\S+)\s+\S+\s+swap\s+.*$'
+    replace: '# \1 swap swap defaults 0 0'
+  notify: Reboot if swap was active
+
+- name: Wipe /dev/sda
+  shell: wipefs -a /dev/sda
+  args:
+    warn: false
+
+- name: Add /dev/sda to MicroCeph
+  shell: microceph disk add /dev/sda --wipe
+  args:
+    warn: false
+
+- name: Create /etc/ceph/ceph.conf
+  copy:
+    dest: /etc/ceph/ceph.conf
+    content: |
+      [global]
+      mon_host = {{ hostvars[groups['managers'][0]].ansible_host }}
+
+- import_tasks: cephfs.yml
+  when: inventory_hostname == groups['managers'][0]
+
+- import_tasks: mount.yml

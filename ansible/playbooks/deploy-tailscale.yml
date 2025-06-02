@@ -1,0 +1,25 @@
+- name: Connect all swarm nodes to Tailscale
+  hosts: swarm
+  become: true
+  tasks:
+    - name: Ensure Tailscale is installed
+      shell: curl -fsSL https://tailscale.com/install.sh | sh
+      args:
+        creates: /usr/sbin/tailscaled
+
+    - name: Bring up Tailscale (initial join) on every Pi
+      shell: tailscale up --authkey="{{ tailscale_server_node_setup_key }}"
+      args:
+        creates: /var/lib/tailscale/tailscaled.state
+
+- name: Advertise subnets & exit‑node on first manager
+  hosts: "{{ groups['managers'][0] }}"
+  become: true
+  tasks:
+    - name: Re‑run tailscale up to advertise subnets and exit node
+      shell: |
+        tailscale up \
+          --advertise-routes="10.10.0.0/24,10.10.10.0/24" \
+          --advertise-exit-node
+      args:
+        creates: /var/lib/tailscale/tailscaled.state
