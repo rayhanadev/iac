@@ -44,3 +44,7 @@ umami.rayhanadev.net {
 status.rayhanadev.net {
     reverse_proxy http://alpha:3002
 }
+
+find-my.rayhanadev.net {
+    reverse_proxy http://alpha:8000
+}

@@ -1,0 +1,21 @@
+services:
+  find-my-api:
+    image: rayhanadev/find-my-api:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - APPLE_ICLOUD_ID=${APPLE_ICLOUD_ID}
+      - APPLE_ICLOUD_PASSWORD=${APPLE_ICLOUD_PASSWORD}
+      - APPLE_ICLOUD_DEVICE=${APPLE_ICLOUD_DEVICE}
+    volumes:
+      - find_my_api_data:/app/.icloud
+    deploy:
+      replicas: 1
+
+volumes:
+  find_my_api_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /mnt/cephfs/find-my-api/.icloud
+      o: bind
